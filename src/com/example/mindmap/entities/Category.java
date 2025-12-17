@@ -3,49 +3,32 @@ package com.example.mindmap.entities;
 public class Category {
     private int id;
     private String title;
-    private String color; // HEX
-    private User user;    // власник категорії
+    private String color; // "#RRGGBB"
+    private User owner;
 
-    public Category() {
-    }
+    public Category() {}
 
-    public Category(int id, String title, String color, User user) {
+    public Category(int id, String title, String color, User owner) {
         this.id = id;
         this.title = title;
         this.color = color;
-        this.user = user;
+        this.owner = owner;
     }
 
-    // гетери/сетери
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getColor() { return color; }
+    public void setColor(String color) { this.color = color; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
 
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
+    @Override
+    public String toString() {
+        return title; // щоб ComboBox показував назву
     }
 }

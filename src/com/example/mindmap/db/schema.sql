@@ -1,4 +1,4 @@
--- 0. Створюємо базу даних, якщо її ще немає
+-- 0. Створюємо базу даних
 CREATE DATABASE IF NOT EXISTS mindmapdb CHARACTER SET utf8mb4;
 USE mindmapdb;
 
@@ -53,3 +53,18 @@ CREATE TABLE IF NOT EXISTS MapElements (
 
     FOREIGN KEY (map_id) REFERENCES MindMaps(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS MapStrokes (
+    stroke_id VARCHAR(36) PRIMARY KEY,
+    map_id INT NOT NULL,
+    color_argb INT NOT NULL,
+    width FLOAT NOT NULL,
+    dashed BOOLEAN NOT NULL,
+    points LONGTEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (map_id) REFERENCES MindMaps(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_mapstrokes_map_id ON MapStrokes(map_id);
+
+

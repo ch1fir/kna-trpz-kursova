@@ -4,10 +4,10 @@ import com.example.mindmap.entities.MindMap;
 import com.example.mindmap.entities.User;
 import com.example.mindmap.services.AuthService;
 import com.example.mindmap.services.MindMapService;
+import com.example.mindmap.ui.dashboard.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
 
 public class DashboardForm extends JFrame {
 
@@ -15,8 +15,11 @@ public class DashboardForm extends JFrame {
     private final AuthService authService;
     private final MindMapService mindMapService;
 
-    private DefaultListModel<MindMap> listModel;
-    private JList<MindMap> mapsList;
+    private final DashboardMediatorImpl mediator;
+
+    private final MapsListPanel mapsListPanel = new MapsListPanel();
+    private final MapPropertiesPanel propertiesPanel = new MapPropertiesPanel();
+    private final SearchSortPanel searchSortPanel = new SearchSortPanel();
 
     public DashboardForm(User user, AuthService authService, MindMapService mindMapService) {
         super("Mind Map - Dashboard");
@@ -24,47 +27,47 @@ public class DashboardForm extends JFrame {
         this.authService = authService;
         this.mindMapService = mindMapService;
 
+        this.mediator = new DashboardMediatorImpl(user, mindMapService);
+
         initComponents();
-        loadMaps();
+        mediator.register(mapsListPanel, propertiesPanel, searchSortPanel);
     }
 
     private void initComponents() {
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setSize(720, 430);
+        setSize(980, 520);
         setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(245, 247, 252));
         add(mainPanel);
 
-        // Верхня панель
+        // ===== Top bar =====
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(Color.WHITE);
         topBar.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
         mainPanel.add(topBar, BorderLayout.NORTH);
 
-        // Ліва частина: Hi + Your mind maps
-        JPanel leftPanel = new JPanel();
-        leftPanel.setOpaque(false);
-        leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
+        JPanel left = new JPanel();
+        left.setOpaque(false);
+        left.setLayout(new BoxLayout(left, BoxLayout.Y_AXIS));
 
-        JLabel hiLabel = new JLabel("Hi, " + user.getUsername());
-        hiLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        hiLabel.setForeground(new Color(120, 120, 145));
+        JLabel hi = new JLabel("Hi, " + user.getUsername());
+        hi.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        hi.setForeground(new Color(120, 120, 145));
 
-        JLabel subtitleLabel = new JLabel("Your mind maps");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        subtitleLabel.setForeground(new Color(40, 40, 70));
+        JLabel title = new JLabel("Your mind maps");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        title.setForeground(new Color(40, 40, 70));
 
-        leftPanel.add(hiLabel);
-        leftPanel.add(Box.createVerticalStrut(4));
-        leftPanel.add(subtitleLabel);
+        left.add(hi);
+        left.add(Box.createVerticalStrut(4));
+        left.add(title);
 
-        topBar.add(leftPanel, BorderLayout.WEST);
+        topBar.add(left, BorderLayout.WEST);
 
-        // Права частина: New map + Logout
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        rightPanel.setOpaque(false);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        right.setOpaque(false);
 
         JButton newMapBtn = new JButton("New map");
         JButton logoutBtn = new JButton("Logout");
@@ -72,69 +75,41 @@ public class DashboardForm extends JFrame {
         styleNewMapButton(newMapBtn);
         styleLogoutButton(logoutBtn);
 
-        rightPanel.add(newMapBtn);
-        rightPanel.add(logoutBtn);
+        right.add(newMapBtn);
+        right.add(logoutBtn);
+        topBar.add(right, BorderLayout.EAST);
 
-        topBar.add(rightPanel, BorderLayout.EAST);
+        // ===== Center: split =====
+        JPanel leftCenter = new JPanel(new BorderLayout());
+        leftCenter.setOpaque(false);
+        leftCenter.setBorder(BorderFactory.createEmptyBorder(10, 16, 16, 8));
+        leftCenter.add(searchSortPanel, BorderLayout.NORTH);
+        leftCenter.add(mapsListPanel, BorderLayout.CENTER);
 
-        // Центральна частина
-        JPanel centerPanel = new JPanel(new BorderLayout());
-        centerPanel.setOpaque(false);
-        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 16, 16, 16));
+        JPanel rightCenter = new JPanel(new BorderLayout());
+        rightCenter.setOpaque(false);
+        rightCenter.setBorder(BorderFactory.createEmptyBorder(10, 8, 16, 16));
+        rightCenter.add(propertiesPanel, BorderLayout.NORTH);
 
-        listModel = new DefaultListModel<>();
-        mapsList = new JList<>(listModel);
-        mapsList.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        mapsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftCenter, rightCenter);
+        split.setDividerLocation(560);
+        split.setBorder(null);
+        mainPanel.add(split, BorderLayout.CENTER);
 
-        JScrollPane scrollPane = new JScrollPane(mapsList);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(225, 227, 235)));
-
-        centerPanel.add(scrollPane, BorderLayout.CENTER);
-        mainPanel.add(centerPanel, BorderLayout.CENTER);
-
-        // Обробники кнопок
+        // ===== Handlers =====
         newMapBtn.addActionListener(e -> onCreateMap());
         logoutBtn.addActionListener(e -> onLogout());
 
-        // Подвійний клік по мапі – відкриває редактор
-        mapsList.addMouseListener(new java.awt.event.MouseAdapter() {
+        // Double click open
+        mapsListPanel.getList().addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (e.getClickCount() == 2) { // double click
-                    MindMap selected = mapsList.getSelectedValue();
-                    if (selected != null) {
-                        openEditor(selected);
-                    }
+                if (e.getClickCount() == 2) {
+                    MindMap selected = mapsListPanel.getSelected();
+                    if (selected != null) openEditor(selected);
                 }
             }
         });
-    }
-
-    private void styleNewMapButton(JButton btn) {
-        btn.setBackground(new Color(76, 175, 80)); // зелений
-        btn.setForeground(Color.BLACK);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 26, 10, 26));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
-    }
-
-    private void styleLogoutButton(JButton btn) {
-        btn.setBackground(new Color(244, 67, 54)); // червоний
-        btn.setForeground(Color.BLACK);
-        btn.setFocusPainted(false);
-        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
-    }
-
-    private void loadMaps() {
-        listModel.clear();
-        List<MindMap> maps = mindMapService.getMapsByUser(user);
-        for (MindMap m : maps) {
-            listModel.addElement(m);
-        }
     }
 
     private void onCreateMap() {
@@ -145,8 +120,8 @@ public class DashboardForm extends JFrame {
             return;
         }
 
-        mindMapService.createMap(title, user);
-        loadMaps();
+        mindMapService.createMap(title.trim(), user);
+        mediator.refresh();
     }
 
     private void onLogout() {
@@ -160,5 +135,23 @@ public class DashboardForm extends JFrame {
         SwingUtilities.invokeLater(() ->
                 new MindMapEditorForm(map, mindMapService).setVisible(true)
         );
+    }
+
+    private void styleNewMapButton(JButton btn) {
+        btn.setBackground(new Color(76, 175, 80));
+        btn.setForeground(Color.BLACK);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 26, 10, 26));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+    }
+
+    private void styleLogoutButton(JButton btn) {
+        btn.setBackground(new Color(244, 67, 54));
+        btn.setForeground(Color.BLACK);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 15));
     }
 }

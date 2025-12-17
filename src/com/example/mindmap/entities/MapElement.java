@@ -1,5 +1,7 @@
 package com.example.mindmap.entities;
 
+import com.example.mindmap.visitor.MapElementVisitor;
+
 public abstract class MapElement {
 
     protected int id;
@@ -7,51 +9,44 @@ public abstract class MapElement {
     protected float y;
     protected MindMap map;
 
+    protected int width;
+    protected int height;
+
     public MapElement(int id, float x, float y, MindMap map) {
+        this(id, x, y, map, 140, 45);
+    }
+
+    public MapElement(int id, float x, float y, MindMap map, int width, int height) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.map = map;
+        this.width = width;
+        this.height = height;
     }
 
-    // Тип елемента: "TEXT", "IMAGE" і т.д.
     public abstract String getType();
-
-    // 🔹 Універсальний текст для відображення на Canvas
     public abstract String getTextForDisplay();
     public abstract void setTextForDisplay(String text);
 
-    // --- Гетери / сетери ---
+    // Visitor entry-point
+    public abstract void accept(MapElementVisitor visitor);
 
-    public int getId() {
-        return id;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public float getX() { return x; }
+    public void setX(float x) { this.x = x; }
 
-    public float getX() {
-        return x;
-    }
+    public float getY() { return y; }
+    public void setY(float y) { this.y = y; }
 
-    public void setX(float x) {
-        this.x = x;
-    }
+    public MindMap getMap() { return map; }
+    public void setMap(MindMap map) { this.map = map; }
 
-    public float getY() {
-        return y;
-    }
+    public int getWidthPx() { return width; }
+    public void setWidthPx(int width) { this.width = Math.max(width, 40); }
 
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public MindMap getMap() {
-        return map;
-    }
-
-    public void setMap(MindMap map) {
-        this.map = map;
-    }
+    public int getHeightPx() { return height; }
+    public void setHeightPx(int height) { this.height = Math.max(height, 30); }
 }

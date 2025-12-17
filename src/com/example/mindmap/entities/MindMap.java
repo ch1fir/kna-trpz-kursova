@@ -7,13 +7,14 @@ import java.util.List;
 public class MindMap {
     private int id;
     private String title;
+    private String description;          // нове поле
     private LocalDateTime createdAt;
     private boolean favorite;
     private String previewImage;
 
     private User owner;
     private Category category;
-    private List<MapElement> elements = new ArrayList<>();
+    private final List<MapElement> elements = new ArrayList<>();
 
     public MindMap() {
         this.createdAt = LocalDateTime.now();
@@ -38,6 +39,11 @@ public class MindMap {
         this.category = category;
     }
 
+    // Для сумісності з репозиторієм/медіатором
+    public void setCategory(Category category) {
+        changeCategory(category);
+    }
+
     public void addElement(MapElement element) {
         elements.add(element);
     }
@@ -46,54 +52,31 @@ public class MindMap {
         elements.remove(element);
     }
 
-    // гетери/сетери
-    public int getId() {
-        return id;
-    }
+    // getters / setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getTitle() {
-        return title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
+    public boolean isFavorite() { return favorite; }
+    public void setFavorite(boolean favorite) { this.favorite = favorite; }
 
-    public boolean isFavorite() {
-        return favorite;
-    }
+    public String getPreviewImage() { return previewImage; }
+    public void setPreviewImage(String previewImage) { this.previewImage = previewImage; }
 
-    public String getPreviewImage() {
-        return previewImage;
-    }
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
 
-    public void setPreviewImage(String previewImage) {
-        this.previewImage = previewImage;
-    }
+    public Category getCategory() { return category; }
 
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public List<MapElement> getElements() {
-        return elements;
-    }
+    public List<MapElement> getElements() { return elements; }
 
     @Override
     public String toString() {

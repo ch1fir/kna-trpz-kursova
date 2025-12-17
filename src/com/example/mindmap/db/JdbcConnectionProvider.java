@@ -8,8 +8,7 @@ public class JdbcConnectionProvider {
 
     private static final String URL = "jdbc:mysql://localhost:3306/mindmapdb";
     private static final String USER = "root";
-    private static final String PASSWORD = ""; // АБО твій реальний пароль, якщо він є
-
+    private static final String PASSWORD = "";
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver"); // драйвер вже працює
